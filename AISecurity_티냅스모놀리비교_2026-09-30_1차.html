@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>티냅스(Tynapse) &amp; 모놀리(Monoly) 기업·기술 비교 분석 및 엔터프라이즈 AI 시스템 아키텍처 보고서</title>
+  <style>
+    /* ==========================================================================
+       LG U+ 테마 표준 디자인 토큰 (Design Tokens)
+       ========================================================================== */
+    :root {
+      --uplus-magenta: #E6007E;       /* U+ 브랜드 프라이머리 마젠타 */
+      --uplus-magenta-dark: #A8005C;  /* 텍스트 가독성 확보용 딥 마젠타 */
+      --uplus-magenta-light: #FDF0F6; /* 하이라이트 배경용 연마젠타 */
+      --ink-primary: #1F1F1F;         /* 본문 메인 텍스트 */
+      --ink-secondary: #4B5563;       /* 보조 설명 및 레이블 */
+      --ink-muted: #8E95A0;           /* 메타정보 및 비활성 텍스트 */
+      --bg-canvas: #F5F6F8;           /* 전체 대시보드 캔버스 배경 */
+      --bg-card: #FFFFFF;             /* 개별 카드 컨테이너 배경 */
+      --border-subtle: #E5E8EB;       /* 기본 구분선 및 테두리 */
+      --border-strong: #D1D5DB;       /* 강조 테두리 */
+      
+      /* 상태 표시 색상 */
+      --status-success-bg: #ECFDF5;
+      --status-success-text: #065F46;
+      --status-success-border: #A7F3D0;
+      
+      --status-warning-bg: #FFFBEB;
+      --status-warning-text: #92400E;
+      --status-warning-border: #FDE68A;
+      
+      --status-danger-bg: #FEF2F2;
+      --status-danger-text: #991B1B;
+      --status-danger-border: #FECACA;
+      
+      --status-neutral-bg: #F3F4F6;
+      --status-neutral-text: #374151;
+      --status-neutral-border: #E5E7EB;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --font-stack: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--bg-canvas);
+      color: var(--ink-primary);
+      line-height: 1.65;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+      padding: 32px 16px;
+    }
+    .report-container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    a { color: var(--uplus-magenta-dark); text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+
+    /* 헤더 및 메타데이터 블록 */
+    .report-header {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+    }
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .badge-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--uplus-magenta-light);
+      color: var(--uplus-magenta);
+      border: 1px solid rgba(230, 0, 126, 0.2);
+    }
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--status-neutral-bg);
+      color: var(--status-neutral-text);
+      border: 1px solid var(--status-neutral-border);
+    }
+
+    .report-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+    .report-subtitle {
+      font-size: 15px;
+      color: var(--ink-secondary);
+      margin-bottom: 20px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 13px;
+    }
+    .meta-item { display: flex; flex-direction: column; }
+    .meta-label { color: var(--ink-muted); margin-bottom: 2px; }
+    .meta-value { font-weight: 600; color: var(--ink-primary); }
+
+    /* 유틸리티 바 */
+    .utility-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid var(--border-subtle);
+      background: #FFFFFF;
+      color: var(--ink-primary);
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+      background: var(--bg-canvas);
+      border-color: var(--border-strong);
+    }
+    .btn-action.btn-primary {
+      background: var(--uplus-magenta);
+      color: #FFFFFF;
+      border-color: var(--uplus-magenta);
+    }
+    .btn-action.btn-primary:hover {
+      background: var(--uplus-magenta-dark);
+    }
+
+    /* Executive 1-Pager Dashboard */
+    .exec-summary-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-subtle);
+      border-left: 5px solid var(--uplus-magenta);
+      box-shadow: var(--shadow-card);
+    }
+    .exec-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .exec-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .kpi-box {
+      background: var(--bg-canvas);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid var(--border-subtle);
+    }
+    .kpi-title { font-size: 12px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .kpi-value { font-size: 18px; font-weight: 700; color: var(--ink-primary); margin-bottom: 4px; }
+    .kpi-desc { font-size: 13px; color: var(--ink-secondary); }
+
+    .decision-verdict {
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      background: var(--uplus-magenta-light);
+      border: 1px solid rgba(230, 0, 126, 0.2);
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--ink-primary);
+    }
+    .decision-verdict strong { color: var(--uplus-magenta-dark); }
+
+    /* 본문 섹션 */
+    .content-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--uplus-magenta);
+      border-radius: 2px;
+    }
+    .subsection-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin: 20px 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 테이블 */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #F8F9FA;
+      color: var(--ink-primary);
+      font-weight: 600;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--uplus-magenta);
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--ink-secondary);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background-color: #FAFAFB; }
+
+    /* 상태 뱃지 */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-badge.success { background: var(--status-success-bg); color: var(--status-success-text); border: 1px solid var(--status-success-border); }
+    .status-badge.warning { background: var(--status-warning-bg); color: var(--status-warning-text); border: 1px solid var(--status-warning-border); }
+    .status-badge.danger  { background: var(--status-danger-bg);  color: var(--status-danger-text);  border: 1px solid var(--status-danger-border); }
+    .status-badge.neutral { background: var(--status-neutral-bg); color: var(--status-neutral-text); border: 1px solid var(--status-neutral-border); }
+
+    /* 다이어그램 컨테이너 */
+    .diagram-container {
+      margin: 20px 0;
+      padding: 20px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+    .diagram-meta {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    .diagram-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* 카드 그리드 */
+    .card-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .feature-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 22px;
+    }
+    .feature-card.highlight {
+      border-top: 4px solid var(--uplus-magenta);
+    }
+    .feature-card.secondary {
+      border-top: 4px solid #3B82F6;
+    }
+    .feature-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .feature-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    /* 리스트 스타일 */
+    .bullet-list {
+      padding-left: 20px;
+      line-height: 1.8;
+      color: var(--ink-secondary);
+    }
+    .bullet-list li { margin-bottom: 6px; }
+
+    /* 콜아웃 박스 */
+    .callout-box {
+      background: var(--bg-canvas);
+      border-left: 4px solid var(--uplus-magenta);
+      padding: 14px 18px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 14px 0;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+    }
+
+    /* 참고 출처 */
+    .source-list { list-style: none; font-size: 13px; }
+    .source-item {
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .source-item:last-child { border-bottom: none; }
+    .source-meta { color: var(--ink-muted); font-size: 12px; }
+
+    /* 인쇄 최적화 */
+    @media print {
+      body { background: #FFFFFF; padding: 0; font-size: 11pt; color: #000000; }
+      .report-container { max-width: 100%; }
+      .utility-bar { display: none !important; }
+      .report-header, .exec-summary-card, .content-section {
+        box-shadow: none !important;
+        border: 1px solid #CCCCCC !important;
+        margin-bottom: 16px !important;
+        page-break-inside: avoid;
+      }
+      .table-responsive { overflow: visible !important; }
+      table { font-size: 9pt; }
+      a { color: #000000; text-decoration: underline; }
+      a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; color: #555555; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-container">
+
+    <!-- 1. 헤더 및 메타데이터 -->
+    <header class="report-header">
+      <div class="header-top-row">
+        <div class="badge-group">
+          <span class="type-badge" id="meta-type">조사 유형: 제품·솔루션 &amp; 아키텍처 기술 검토</span>
+          <span class="version-badge" id="meta-version">정본 1차 완결본</span>
+        </div>
+        <div class="utility-bar">
+          <button type="button" class="btn-action" onclick="window.print()">🖨️ PDF 인쇄</button>
+          <button type="button" class="btn-action btn-primary" id="btn-copy-slack" onclick="copySlackSummary()">📋 슬랙 공유용 요약 복사</button>
+        </div>
+      </div>
+
+      <h1 class="report-title" id="report-title">엔터프라이즈 AI 보안 솔루션 심층 분석: 티냅스(Tynapse) vs 모놀리(Monoly)</h1>
+      <p class="report-subtitle" id="report-subtitle">고객사 사내 AI 시스템 관점에서 데이터 주권 보호(모놀리)와 런타임 의사결정 통제(티냅스)의 기술 비교 및 상호 보완 아키텍처</p>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">조사 대상 솔루션</span>
+          <span class="meta-value" id="meta-target">Tynapse Trust Layer v1.0 / Monoly Enclave v2.x</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">기준일자 및 기준시</span>
+          <span class="meta-value" id="meta-date">2026-09-30 (KST)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">검토 목적 및 대상 독자</span>
+          <span class="meta-value" id="meta-audience">AI/DX 사업기획, 정보보안팀, CISO/CIO 의사결정용</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">정본 파일명</span>
+          <span class="meta-value" id="meta-filename">AISecurity_티냅스모놀리비교_2026-09-30_1차.html</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. Executive 1-Pager Dashboard -->
+    <section class="exec-summary-card">
+      <div class="exec-header">
+        <h2 class="exec-title">Executive Summary — 핵심 의사결정 요약</h2>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-box">
+          <div class="kpi-title">솔루션 상호 관계</div>
+          <div class="kpi-value"><span class="status-badge success">상호 보완적 (Zero-Trust)</span></div>
+          <div class="kpi-desc">데이터 인프라 보호 + 런타임 행동 통제</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-title">모놀리 (Monoly) 핵심</div>
+          <div class="kpi-value">데이터 주권 &amp; 토큰화</div>
+          <div class="kpi-desc">망분리 환경 PII/기밀 외부 유출 원천 차단</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-title">티냅스 (Tynapse) 핵심</div>
+          <div class="kpi-value">AI 런타임 의사결정 통제</div>
+          <div class="kpi-desc">0.2초 내 Tool Calling 전수 검사 &amp; TAS 증빙</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-title">엔터프라이즈 도입 권고</div>
+          <div class="kpi-value"><span class="status-badge success">2계층 방어선 구축</span></div>
+          <div class="kpi-desc">고객사 기간계 연계 시 필수 계층화 추천</div>
+        </div>
+      </div>
+
+      <div class="decision-verdict">
+        <strong>💡 종합 제언:</strong> <strong>티냅스</strong>와 <strong>모놀리</strong>는 경쟁 솔루션이 아니며, 엔터프라이즈 AI 시스템에서 <strong>보호하는 계층(Layer)과 통제 대상</strong>이 명확히 구별됩니다. 외부 LLM/SaaS 연동 시 민감 데이터 유출 방지 및 망분리 규제 준수는 <strong>모놀리(Monoly Enclave)</strong>로 해결하고, 사내 레거시 시스템과 연동되어 자율적으로 금융 거래·API를 실행하는 에이전틱 AI의 오작동 및 컴플라이언스 위험은 <strong>티냅스(Tynapse Trust Layer)</strong>로 통제하는 <strong>2계층(Defense-in-Depth) 통합 아키텍처</strong> 구축을 권고합니다.
+      </div>
+    </section>
+
+    <!-- 3. 주 섹션 1: 기업별 상세 프로필 및 핵심 기술 분석 -->
+    <section class="content-section">
+      <h2 class="section-title">1. 공급사별 상세 프로필 및 핵심 기술 분석</h2>
+      
+      <div class="card-grid-2">
+        <!-- 티냅스 카드 -->
+        <div class="feature-card highlight">
+          <div class="feature-card-header">
+            <h3 class="feature-card-title">티냅스 (Tynapse Inc.)</h3>
+            <span class="status-badge success">AI 런타임 의사결정 통제</span>
+          </div>
+          <p style="font-size: 13px; color: var(--ink-muted); margin-bottom: 12px;">
+            설립: 2025.08 | 대표: 강민승 (전 피플펀드 CTO/CISO, 코박 공동창업자) | 누적투자: 49억 원
+          </p>
+          <ul class="bullet-list" style="font-size: 13.5px;">
+            <li><strong>핵심 정체성:</strong> AI 에이전트의 의사결정과 시스템 실행 행동을 실시간 검증·통제하는 ‘AI 런타임 신뢰 인프라(AI Trust Layer)’.</li>
+            <li><strong>주요 해결 과제:</strong> AI 에이전트가 API 호출, 거래 실행 등을 직접 수행할 때 발생하는 환각, 비인가 명령 실행, 탈옥(Jailbreak), 규정 위반 방지.</li>
+            <li><strong>핵심 모듈 구성:</strong>
+              <br>• <strong>Detect Guard:</strong> 인입 프롬프트 및 RAG 컨텍스트의 악의적 주입 사전 차단
+              <br>• <strong>Trust Judge:</strong> 에이전트의 추론 및 도구 호출 파라미터를 0.2초 내 전수 검사
+              <br>• <strong>Trust Ops:</strong> 판단 근거를 법적 수준 디지털 증적인 <code>Trust Attestation Set(TAS)</code>으로 자동 기록
+              <br>• <strong>자가강화 플라이휠:</strong> 운영 데이터 자동 레이블링 및 검증 모델 재학습
+            </li>
+            <li><strong>주요 성과:</strong> KB국민은행 AI 가드레일 PoC 수행, 2026 엔비디아 인셉션 그랜드 챌린지 아태 Top 10 선정, 미래에셋벤처투자·카카오벤처스 등 투자 유치.</li>
+          </ul>
+        </div>
+
+        <!-- 모놀리 카드 -->
+        <div class="feature-card secondary">
+          <div class="feature-card-header">
+            <h3 class="feature-card-title">모놀리 (Monoly Inc.)</h3>
+            <span class="status-badge neutral">데이터 주권 &amp; SaaS 보안</span>
+          </div>
+          <p style="font-size: 13px; color: var(--ink-muted); margin-bottom: 12px;">
+            설립: 2020.06 | 대표: 성기운 (전 삼성SDS 블록체인연구랩장) | 가트너 모범사례 등재
+          </p>
+          <ul class="bullet-list" style="font-size: 13.5px;">
+            <li><strong>핵심 정체성:</strong> 기업의 데이터 주권과 보안을 보장하는 탈중앙화 SaaS 및 생성형 AI 데이터 보안 중계 플랫폼.</li>
+            <li><strong>주요 해결 과제:</strong> 외부 SaaS나 생성형 AI를 활용할 때 사내 기밀 및 개인정보(PII)가 외부 서버로 유출되는 문제와 망분리 규제 위반 해결.</li>
+            <li><strong>핵심 모듈 구성:</strong>
+              <br>• <strong>Monoly Enclave:</strong> 기업 내부망/VPC에 보안 격리 구역을 두어 원본 데이터 사내 격리
+              <br>• <strong>토큰화(Tokenization):</strong> 외부 AI 전송 시 민감 데이터를 무의미한 가상 암호 토큰으로 치환
+              <br>• <strong>데이터 레지던시 통제:</strong> 데이터가 저장·전송되는 물리적/논리적 경로를 전사 정책에 따라 완벽 통제
+              <br>• <strong>Monoly Suite:</strong> 안전한 파일 공유, 협업 및 전자서명 턴키 애플리케이션
+            </li>
+            <li><strong>주요 성과:</strong> 가트너 테크스케이프 신흥 보안 기술 등재, 금융위 혁신금융서비스 지정 이력, 국내 주요 시중은행 PoC 검증 완료.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 주 섹션 2: 고객사 내 AI 시스템 관점 아키텍처 및 관계도 -->
+    <section class="content-section">
+      <h2 class="section-title">2. 고객사 내 AI 시스템 관점 관계도 (End-to-End Pipeline)</h2>
+      <p style="color: var(--ink-secondary); margin-bottom: 14px;">
+        고객사의 사내 업무망, 데이터 인프라, AI 에이전트 추론 환경, 기간계(Core Banking / ERP) 연동 과정에서 <strong>모놀리(데이터 보호)</strong>와 <strong>티냅스(의사결정 통제)</strong>가 배치되는 통합 Zero-Trust 아키텍처입니다.
+      </p>
+
+      <!-- SVG 아키텍처 다이어그램 (변 중앙 앵커 연결, 직각 라우팅, 텍스트 금지구역 준수) -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 1000 480" width="100%" height="480" xmlns="http://www.w3.org/2000/svg" style="background:#FFFFFF; border-radius:8px; font-family:'Pretendard', 'Apple SD Gothic Neo', sans-serif;">
+          <defs>
+            <marker id="arrow-magenta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E6007E"/>
+            </marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563EB"/>
+            </marker>
+            <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6B7280"/>
+            </marker>
+          </defs>
+
+          <!-- 1. 배경 및 영역 구역 (Zone Definitions) -->
+          <!-- Zone 1: 고객사 내부 업무망 접점 -->
+          <rect x="25" y="25" width="220" height="430" rx="10" fill="#F8F9FA" stroke="#E5E8EB" stroke-width="1.5"/>
+          <text x="135" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#4B5563">ZONE 1. 사내 업무망 / 클라이언트</text>
+
+          <!-- Zone 2: 모놀리 데이터 보안 계층 -->
+          <rect x="265" y="25" width="220" height="430" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+          <text x="375" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#1D4ED8">ZONE 2. 모놀리 데이터 보안 계층</text>
+
+          <!-- Zone 3: AI 에이전트 & LLM 추론 계층 -->
+          <rect x="505" y="25" width="220" height="430" rx="10" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="1.5"/>
+          <text x="615" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#7E22CE">ZONE 3. AI 에이전트 추론 계층</text>
+
+          <!-- Zone 4: 티냅스 런타임 의사결정 통제 계층 -->
+          <rect x="745" y="25" width="230" height="430" rx="10" fill="#FDF2F8" stroke="#FBCFE8" stroke-width="1.5"/>
+          <text x="860" y="52" text-anchor="middle" font-size="13" font-weight="700" fill="#BE185D">ZONE 4. 티냅스 의사결정 통제 계층</text>
+
+          <!-- 2. 직각 라우팅 연결선 (변 중앙 앵커 연결 & 텍스트 금지구역 준수) -->
+          <!-- ① 노드1 우측(225,115) -> 노드3 좌측(285,115) -->
+          <line x1="225" y1="115" x2="285" y2="115" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+          <!-- ② 노드3 하단(375,150) -> 노드4 상단(375,220) -->
+          <line x1="375" y1="150" x2="375" y2="220" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+          <!-- ③ 노드3 우측(465,115) -> 노드5 좌측(525,115) -->
+          <line x1="465" y1="115" x2="525" y2="115" stroke="#7E22CE" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+          <!-- ④ 노드5 우측(705,115) -> 노드6 좌측(765,115) -->
+          <line x1="705" y1="115" x2="765" y2="115" stroke="#E6007E" stroke-width="2" marker-end="url(#arrow-magenta)"/>
+
+          <!-- ⑤ 노드6 하단(860,160) -> 노드7 상단(860,230) -->
+          <line x1="860" y1="160" x2="860" y2="230" stroke="#E6007E" stroke-width="2" marker-end="url(#arrow-magenta)"/>
+
+          <!-- ⑥ 노드6 하단(860,160)에서 분기 -> 직각 라우팅 -> 노드2 우측(225,375) 진입 -->
+          <path d="M 860 160 L 860 375 L 225 375" fill="none" stroke="#E6007E" stroke-width="2.5" stroke-dasharray="4 2" marker-end="url(#arrow-magenta)"/>
+
+          <!-- 3. 노드 박스 (Node Boxes) -->
+          <!-- 노드 1: 사용자 / 업무 포털 -->
+          <rect x="45" y="80" width="180" height="70" rx="8" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1.5"/>
+          <text x="135" y="112" text-anchor="middle" font-size="13" font-weight="700" fill="#1F1F1F">① 사용자 / 업무 포털</text>
+          <text x="135" y="132" text-anchor="middle" font-size="11" fill="#6B7280">업무 요청 (고객 PII/기밀 포함)</text>
+
+          <!-- 노드 3: 모놀리 엔클레이브 게이트웨이 -->
+          <rect x="285" y="80" width="180" height="70" rx="8" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
+          <text x="375" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#1D4ED8">② Monoly Enclave</text>
+          <text x="375" y="130" text-anchor="middle" font-size="11" fill="#4B5563">PII 실시간 식별 &amp; 토큰화</text>
+
+          <!-- 노드 4: 사내 격리 데이터 볼트 -->
+          <rect x="285" y="220" width="180" height="65" rx="8" fill="#FFFFFF" stroke="#93C5FD" stroke-width="1.5"/>
+          <text x="375" y="248" text-anchor="middle" font-size="12" font-weight="700" fill="#1E40AF">사내 격리 데이터 볼트</text>
+          <text x="375" y="268" text-anchor="middle" font-size="11" fill="#6B7280">원본 데이터 사내 격리 보관</text>
+
+          <!-- 노드 5: AI 에이전트 / LLM 오케스트레이터 -->
+          <rect x="525" y="80" width="180" height="70" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="2"/>
+          <text x="615" y="110" text-anchor="middle" font-size="13" font-weight="700" fill="#6D28D9">③ AI Agent &amp; LLM</text>
+          <text x="615" y="130" text-anchor="middle" font-size="11" fill="#4B5563">가명화 컨텍스트 추론 &amp; Tool 계획</text>
+
+          <!-- 노드 6: 티냅스 트러스트 레이어 -->
+          <rect x="765" y="80" width="190" height="80" rx="8" fill="#FFFFFF" stroke="#E6007E" stroke-width="2.5"/>
+          <text x="860" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#A8005C">④ Tynapse Trust Layer</text>
+          <text x="860" y="128" text-anchor="middle" font-size="11" font-weight="600" fill="#E6007E">Detect Guard + Trust Judge</text>
+          <text x="860" y="146" text-anchor="middle" font-size="10" fill="#6B7280">0.2초 이내 실행 파라미터 전수 검사</text>
+
+          <!-- 노드 7: TAS 디지털 증빙 저장소 -->
+          <rect x="765" y="230" width="190" height="65" rx="8" fill="#FFFFFF" stroke="#F472B6" stroke-width="1.5"/>
+          <text x="860" y="258" text-anchor="middle" font-size="12" font-weight="700" fill="#9D174D">Trust Attestation (TAS)</text>
+          <text x="860" y="278" text-anchor="middle" font-size="11" fill="#6B7280">의사결정 디지털 증적 자동 축적</text>
+
+          <!-- 노드 2: 사내 비즈니스 코어 시스템 (기간계) -->
+          <rect x="45" y="340" width="180" height="70" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="2"/>
+          <text x="135" y="370" text-anchor="middle" font-size="13" font-weight="700" fill="#065F46">⑤ 사내 기간계 코어 시스템</text>
+          <text x="135" y="390" text-anchor="middle" font-size="11" fill="#4B5563">ERP / 코어뱅킹 / DB 최종 커밋</text>
+
+          <!-- 4. 연결선 라벨 (텍스트 금지구역 보호 & 가독성 확보) -->
+          <rect x="235" y="96" width="40" height="18" rx="3" fill="#FFFFFF" stroke="#BFDBFE"/>
+          <text x="255" y="109" text-anchor="middle" font-size="10" font-weight="700" fill="#2563EB">원문</text>
+
+          <rect x="475" y="96" width="40" height="18" rx="3" fill="#FFFFFF" stroke="#DDD6FE"/>
+          <text x="495" y="109" text-anchor="middle" font-size="10" font-weight="700" fill="#7E22CE">토큰</text>
+
+          <rect x="715" y="96" width="40" height="18" rx="3" fill="#FFFFFF" stroke="#FBCFE8"/>
+          <text x="735" y="109" text-anchor="middle" font-size="10" font-weight="700" fill="#BE185D">계획</text>
+
+          <rect x="440" y="358" width="220" height="24" rx="4" fill="#FFFFFF" stroke="#E6007E" stroke-width="1.5"/>
+          <text x="550" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#A8005C">⑥ 정책 검증 승인된 Tool Call만 최종 실행</text>
+        </svg>
+        <div class="diagram-meta">▲ [도식 1] 고객사 사내 업무망 관점의 모놀리(데이터 보호) + 티냅스(의사결정 통제) 연계 아키텍처</div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <h3 class="subsection-title">파이프라인 단계별 상호 작용 상세</h3>
+        <ol class="bullet-list" style="padding-left: 20px;">
+          <li><strong>[인입] 사용자 요청 접수:</strong> 사용자가 고객 주민번호, 계좌번호 등이 포함된 프롬프트나 업무 명령을 인입합니다.</li>
+          <li><strong>[모놀리 단계] 데이터 주권 격리 &amp; 토큰화:</strong> <code>Monoly Enclave</code>가 원본 PII/기밀을 추출하여 사내 보안 볼트에 보관하고, LLM에 전달되는 페이로드를 무의미한 암호 토큰으로 치환하여 외부 유출을 원천 방지합니다.</li>
+          <li><strong>[AI 추론 단계] 오케스트레이션:</strong> AI 에이전트(LLM)가 토큰화된 맥락을 이해하고, 목표 달성을 위한 '도구 호출(예: 계좌 이체 API, 고객 승인 요청 등)' 실행 계획을 수립합니다.</li>
+          <li><strong>[티냅스 단계] 런타임 의사결정 &amp; 행동 통제:</strong> 에이전트가 기간계 API를 호출하기 직전, <code>Tynapse Trust Layer</code>가 0.2초 내에 개입하여 '인출 한도 초과 여부', '승인 절차 우회 여부', '금융 규제 준수 여부'를 전수 판정(Trust Judge)합니다. 비인가 행동은 즉시 차단됩니다.</li>
+          <li><strong>[기록 및 커밋] TAS 증적 보관 &amp; 시스템 실행:</strong> 티냅스는 판단 근거를 <code>Trust Attestation Set</code> 로그로 기록(AI 기본법 감사 대비)하고, 검증을 통과한 안전한 트랜잭션만 고객사의 코어 시스템(Core Banking/ERP)에 전달하여 커밋합니다.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 5. 주 섹션 3: 핵심 기술 사양 및 비교 매트릭스 -->
+    <section class="content-section">
+      <h2 class="section-title">3. 기술 사양 및 핵심 메커니즘 대조 분석</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 140px;">비교 항목</th>
+              <th style="width: 42%;">모놀리 (Monoly)</th>
+              <th style="width: 42%;">티냅스 (Tynapse)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>핵심 포지셔닝</strong></td>
+              <td><strong>데이터 주권 및 SaaS/AI 데이터 보안 관문</strong></td>
+              <td><strong>AI 에이전트 런타임 의사결정 통제 인프라</strong></td>
+            </tr>
+            <tr>
+              <td><strong>주요 통제 대상</strong></td>
+              <td><strong>데이터 페이로드 자체 (Data-at-rest / in-transit)</strong><br>• 고객 개인식별정보(PII), 금융거래원장, 기밀 문서</td>
+              <td><strong>AI의 추론 논리 및 시스템 실행 행동 (Decision / Action)</strong><br>• 비즈니스 규칙 준수, API Tool Call 파라미터, 환각</td>
+            </tr>
+            <tr>
+              <td><strong>핵심 기술 엔진</strong></td>
+              <td><code>Monoly Enclave</code><br>• 안전 격리 엔클레이브 환경<br>• 가명화/토큰화(Tokenization) 엔진</td>
+              <td><code>Tynapse Trust Layer</code><br>• Detect Guard (입력 필터링)<br>• Trust Judge (0.2s 런타임 검증 LLM 판정)<br>• Trust Ops (TAS 디지털 감사 로그)</td>
+            </tr>
+            <tr>
+              <td><strong>해결하는 고유 위험</strong></td>
+              <td>• 외부 LLM 학습에 사내 데이터 노출 위험<br>• 전자금융감독규정상 망분리 규제 위반 위험</td>
+              <td>• 에이전트의 권한 오남용 및 무인가 트랜잭션 실행<br>• 환각(Hallucination)에 의한 오판 및 비즈니스 로직 위배<br>• AI 블랙박스에 대한 법적 책임/설명 불가능성</td>
+            </tr>
+            <tr>
+              <td><strong>지연 시간 (Latency)</strong></td>
+              <td>토큰 변환/복원 오버헤드 (수십 ms 수준)</td>
+              <td>모델 판단 및 룰 검증 오버헤드 (약 0.2초 / 200ms 내외)</td>
+            </tr>
+            <tr>
+              <td><strong>주요 법적/규제 대응</strong></td>
+              <td>개인정보보호법, 신용정보법, 전자금융감독규정 망분리</td>
+              <td>대한민국 AI 기본법, EU AI Act (고위험 AI 설명가능성), ISO 42001</td>
+            </tr>
+            <tr>
+              <td><strong>장애 발생 시 영향</strong></td>
+              <td>외부 통신 단절 시 데이터 전달 불가 (Fail-Closed)</td>
+              <td>바이패스 설정 시 에이전트 무검증 실행 위험 발생 가능</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. 주 섹션 4: 엔터프라이즈(Carrier-Grade) 및 10대 도입 관문 체크 -->
+    <section class="content-section">
+      <h2 class="section-title">4. 엔터프라이즈(Carrier-Grade) 10대 도입 관문 검토</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 140px;">10대 관문</th>
+              <th>모놀리 (Monoly) 점검 내용</th>
+              <th>티냅스 (Tynapse) 점검 내용</th>
+              <th>상태 구분</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. 누가 (Who)</strong></td>
+              <td>전사 임직원 및 외부 생성형 AI/SaaS 사용자</td>
+              <td>기간계 연동 자율 AI 에이전트 및 고객 상담 봇</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>2. 어디서 (Where)</strong></td>
+              <td>사내 업무망 ↔ 외부 클라우드 SaaS 경계</td>
+              <td>사내 애플리케이션 ↔ LLM ↔ 기간계 API 경계</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>3. 무엇을 (What)</strong></td>
+              <td>프롬프트 및 문서 파일 입출력 트래픽</td>
+              <td>에이전트의 함수 호출(Function Calling) 파라미터</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>4. 데이터 (Data)</strong></td>
+              <td>개인식별정보(PII), 계좌번호, 기업 기밀 마스킹</td>
+              <td>의사결정 컨텍스트, 비즈니스 룰, 감사 증빙 데이터</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>5. 사전심의 (Pre)</strong></td>
+              <td>망분리 대체통제 심의, 개인정보 국외이전 검토</td>
+              <td>AI 시스템 위험도 평가 (고위험 AI 분류 심의)</td>
+              <td><span class="status-badge warning">심의 필요</span></td>
+            </tr>
+            <tr>
+              <td><strong>6. 통제방식 (Controls)</strong></td>
+              <td>Enclave 격리, 비가역적 토큰화, 사내 볼트 보관</td>
+              <td>0.2초 이내 런타임 인터셉트, TAS 감사 로그 서명</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>7. 결정권자 (Gov)</strong></td>
+              <td>CISO(정보보호최고책임자) 및 개인정보보호책임자</td>
+              <td>CISO, CAIO(최고AI책임자), 리스크관리위원회</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>8. 외부보고 (Reporting)</strong></td>
+              <td>금융위/금감원 망분리 혁신금융서비스 또는 사전신고</td>
+              <td>과기정통부 AI 기본법 고위험 AI 영향평가 제출</td>
+              <td><span class="status-badge warning">준비 필요</span></td>
+            </tr>
+            <tr>
+              <td><strong>9. 모니터링 (Monitoring)</strong></td>
+              <td>토큰 볼트 접근 로그, 데이터 매핑 주기적 감사</td>
+              <td>TrustOps 플라이휠 (환각/정책위반 레이블링)</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+            <tr>
+              <td><strong>10. 유효성 (Validity)</strong></td>
+              <td>상시 적용 (전자금융감독규정 개정안 연계)</td>
+              <td>상시 적용 (AI 기본법 시행 후 필수 통제)</td>
+              <td><span class="status-badge success">적용 가능</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="kpi-box" style="margin-top: 16px;">
+        <div class="kpi-title">통신사/엔터프라이즈 특화(Carrier-Grade) 환경 충족도</div>
+        <ul class="bullet-list" style="font-size: 13.5px; margin-top: 6px;">
+          <li><strong>초고가용성 (SLA 99.999%):</strong> 모놀리와 티냅스 모두 인라인(In-line) 프록시로 동작하므로 장애 발생 시 무중단 페일오버(Active-Active HA) 설계가 필수적임.</li>
+          <li><strong>에어갭(Air-gapped) 폐쇄망 지원:</strong> 두 솔루션 모두 온프레미스 컨테이너(K8s) 마이크로서비스 형태의 배포를 지원하여 금융·통신 폐쇄망 요건을 만족함.</li>
+          <li><strong>엔터프라이즈 보안 인증 연계:</strong> ISMS-P 및 금융권 보안성 심의 기준에 부합하는 접근 통제 및 암호화 감사 로그 보증.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7. 주 섹션 5: 한계점, 리스크 및 PoC 검증 가이드 -->
+    <section class="content-section">
+      <h2 class="section-title">5. 한계점, 운영 리스크 및 PoC 검증 가이드</h2>
+      
+      <div style="margin-bottom: 16px;">
+        <h3 class="subsection-title">1) 기술적 한계 및 운영 리스크</h3>
+        <ul class="bullet-list">
+          <li><strong>[사실] 지연시간 누적 (Latency Stacking):</strong> 사용자 요청 → <code>모놀리(토큰화)</code> → <code>LLM(추론)</code> → <code>티냅스(판정)</code> → <code>코어 시스템</code>을 거치면서 엔드투엔드 지연시간이 기존 대비 200~300ms 이상 증가할 수 있음.</li>
+          <li><strong>[해석] 정책 정의 복잡도:</strong> 티냅스의 Trust Judge가 효과를 발휘하기 위해서는 사내 업무 규정, 금융 여신 규정, 거래 한도 등을 정교한 정책 규칙(Rule)으로 정의해야 하는 초기 튜닝 리소스 필요.</li>
+          <li><strong>[권고] 비동기 증적 기록:</strong> 티냅스의 TAS 기록 과정은 트랜잭션 크리티컬 경로에서 비동기(Asynchronous) 큐로 처리하여 메인 트래픽의 병목을 차단해야 함.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="subsection-title">2) 실무 PoC 평가 기준표 (Success Criteria)</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>평가 영역</th>
+                <th>모놀리 (Monoly) 검증 기준</th>
+                <th>티냅스 (Tynapse) 검증 기준</th>
+                <th>통과 기준 (Target)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>보안성 / 차단률</strong></td>
+                <td>사내 지정 10대 PII(주민번호/계좌 등) 탐지율</td>
+                <td>악의적 프롬프트 탈옥 및 비인가 Tool Call 차단율</td>
+                <td><strong>99.9% 이상 차단</strong></td>
+              </tr>
+              <tr>
+                <td><strong>성능 (Performance)</strong></td>
+                <td>토큰화/가명화 처리 시 추가 지연시간</td>
+                <td>Trust Judge 런타임 정책 심사 지연시간</td>
+                <td><strong>전체 추가 &lt; 250ms</strong></td>
+              </tr>
+              <tr>
+                <td><strong>장애 대응 (Fail-safe)</strong></td>
+                <td>Enclave 장애 시 원본 데이터 노출 차단 여부</td>
+                <td>Trust Layer 장애 시 무단 트랜잭션 방지</td>
+                <td><strong>Fail-Closed 무결성 입증</strong></td>
+              </tr>
+              <tr>
+                <td><strong>감사 증적 (Audit)</strong></td>
+                <td>토큰-원본 매핑 무결성 감사 추적성</td>
+                <td>의사결정 근거(TAS)의 법적 증빙 형식 검증</td>
+                <td><strong>AI 기본법 감사 규격 충족</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. 출처 및 참고문헌 -->
+    <section class="content-section">
+      <h2 class="section-title">6. 공식 참고 출처 (References)</h2>
+      <ul class="source-list">
+        <li class="source-item">
+          <div>
+            <strong>[1] [티냅스 공식 웹사이트]</strong> <a href="https://tynapse.com" target="_blank" rel="noopener noreferrer">Tynapse — The Trust Layer for Enterprise AI</a>
+          </div>
+          <div class="source-meta">공식 기술 명세 &amp; 아키텍처 | 확인일: 2026-09-30</div>
+        </li>
+        <li class="source-item">
+          <div>
+            <strong>[2] [티냅스 솔루션 아키텍처]</strong> <a href="https://tynapse.com/ko/solution" target="_blank" rel="noopener noreferrer">Tynapse Solution — 런타임 가드레일 &amp; Trust Attestation Set</a>
+          </div>
+          <div class="source-meta">기술 백서 및 KB국민은행 PoC 사양 | 확인일: 2026-09-30</div>
+        </li>
+        <li class="source-item">
+          <div>
+            <strong>[3] [모놀리 공식 웹사이트]</strong> <a href="https://monoly.com" target="_blank" rel="noopener noreferrer">Monoly — Data Sovereignty &amp; Enclave Platform</a>
+          </div>
+          <div class="source-meta">공식 제품 명세 | 확인일: 2026-09-30</div>
+        </li>
+        <li class="source-item">
+          <div>
+            <strong>[4] [ZDNet Korea — 기술 검증 보도]</strong> <a href="https://zdnet.co.kr/view/?no=20240723104005" target="_blank" rel="noopener noreferrer">모놀리, 금융권 망분리 환경 지원 SaaS 기술 검증</a>
+          </div>
+          <div class="source-meta">금융권 망분리 환경 Enclave 기술 실증 | 확인일: 2026-09-30</div>
+        </li>
+        <li class="source-item">
+          <div>
+            <strong>[5] [ZDNet Korea — 데이터 주권 기획]</strong> <a href="https://zdnet.co.kr/view/?no=20241005111922" target="_blank" rel="noopener noreferrer">기업 데이터 주권 '모놀리 엔클레이브'로 실현</a>
+          </div>
+          <div class="source-meta">가트너 테크스케이프 등재 및 토큰화 아키텍처 분석 | 확인일: 2026-09-30</div>
+        </li>
+        <li class="source-item">
+          <div>
+            <strong>[6] [데이터넷 — 대표 심층 인터뷰]</strong> <a href="https://www.datanet.co.kr/news/articleView.html?idxno=198497" target="_blank" rel="noopener noreferrer">성기운 모놀리 대표 “SaaS 이용 기업, 모놀리 엔클레이브 필수”</a>
+          </div>
+          <div class="source-meta">N2SF 제로트러스트 및 SaaS 보안 메커니즘 | 확인일: 2026-09-30</div>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+
+  <!-- 슬랙 요약 복사 스크립트 -->
+  <script>
+    function copySlackSummary() {
+      const title = document.getElementById('report-title').innerText;
+      const subtitle = document.getElementById('report-subtitle').innerText;
+      const metaType = document.getElementById('meta-type').innerText;
+      const metaDate = document.getElementById('meta-date').innerText;
+      const metaTarget = document.getElementById('meta-target').innerText;
+
+      const summaryText = `📢 *[LG U+ 실무 보고서 요약]*\\n` +
+        `*제목:* ${title}\\n` +
+        `*구분:* ${metaType} | ${metaDate}\\n` +
+        `*대상:* ${metaTarget}\\n\\n` +
+        `💡 *핵심 결론:*\\n` +
+        `• ${subtitle}\\n` +
+        `• 모놀리(Monoly): 데이터 주권 & 토큰화로 망분리 환경 PII/기밀 외부 유출 원천 차단\\n` +
+        `• 티냅스(Tynapse): AI 에이전트 런타임 0.2초 전수 검사로 무인가 금융거래/Tool Call 차단 및 TAS 법적 증적 축적\\n` +
+        `• 종합 제언: 두 솔루션은 상호 보완적이며, '모놀리(데이터 보호) + 티냅스(의사결정 통제)'의 2계층 Zero-Trust 아키텍처 구성을 추천함\\n` +
+        `• 정본 파일: \`${document.getElementById('meta-filename').innerText}\`\\n\\n` +
+        `_상세 내용은 단일 HTML 보고서 원문을 참조해 주시기 바랍니다._`;
+
+      navigator.clipboard.writeText(summaryText).then(() => {
+        const btn = document.getElementById('btn-copy-slack');
+        const originalText = btn.innerText;
+        btn.innerText = '✅ 복사 완료!';
+        btn.style.background = '#059669';
+        btn.style.borderColor = '#059669';
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+        }, 2000);
+      }).catch(err => {
+        alert('클립보드 복사에 실패했습니다. 브라우저 권한을 확인하세요.');
+      });
+    }
+  </script>
+</body>
+</html>
